@@ -60,8 +60,6 @@ def _run_scraper(scraper_type, options, metadata):
         scraper_type: bills, legislators, committees, votes
     """
     _clear_scraped_data(options.output_dir, scraper_type)
-    if scraper_type == 'speeches':
-        _clear_scraped_data(options.output_dir, 'events')
 
     scraper = _get_configured_scraper(scraper_type, options, metadata)
     if not scraper:
@@ -80,7 +78,7 @@ def _run_scraper(scraper_type, options, metadata):
     }
     scrape['start_time'] = dt.datetime.utcnow()
 
-    if scraper_type in ('bills', 'votes', 'events', 'speeches'):
+    if scraper_type in ('bills', 'votes'):
         times = options.sessions
         for time in times:
             scraper.validate_session(time, scraper.latest_only)
@@ -93,8 +91,6 @@ def _run_scraper(scraper_type, options, metadata):
     for time in times:
         # old style
         chambers = options.chambers
-        if scraper_type == 'events' and len(options.chambers) == 2:
-            chambers.append('other')
 
         if _is_old_scrape(scraper.scrape):
             for chamber in chambers:
@@ -102,9 +98,8 @@ def _run_scraper(scraper_type, options, metadata):
         else:
             scraper.scrape(time, chambers=chambers)
 
-        # error out if events or votes don't scrape anything
-        if not scraper.object_count and scraper_type not in ('events',
-                                                             'votes'):
+        # error out if bills don't scrape anything
+        if not scraper.object_count and scraper_type  == 'bills':
             raise ScrapeError("%s scraper didn't save any objects" %
                               scraper_type)
 
@@ -137,7 +132,6 @@ def _do_imports(abbrev, args):
     from billy.importers.bills import import_bills
     from billy.importers.legislators import import_legislators
     from billy.importers.committees import import_committees
-    from billy.importers.events import import_events
     from billy.importers.speeches import import_speeches
 
     # always import metadata and districts
@@ -154,12 +148,6 @@ def _do_imports(abbrev, args):
     if 'committees' in args.types:
         report['committees'] = \
             import_committees(abbrev, settings.BILLY_DATA_DIR)
-
-    if 'events' in args.types or 'speeches' in args.types:
-        report['events'] = import_events(abbrev, settings.BILLY_DATA_DIR)
-
-    if 'speeches' in args.types:
-        report['speeches'] = import_speeches(abbrev, settings.BILLY_DATA_DIR)
 
     return report
 
@@ -191,6 +179,9 @@ def _do_reports(abbrev, args):
 
 def main():
     try:
+        # to keep track of how long the entire run takes
+        start_time = dt.datetime.utcnow()
+
         parser = argparse.ArgumentParser(
             description='update billy data',
             parents=[base_arg_parser],
@@ -218,7 +209,7 @@ def main():
             what.add_argument('--' + arg, action='append_const',
                               dest='chambers', const=arg)
         for arg in ('bills', 'legislators', 'committees',
-                    'votes', 'events', 'speeches'):
+                    'votes'):
             what.add_argument('--' + arg, action='append_const', dest='types',
                               const=arg)
         for arg in ('scrape', 'import', 'report', 'session-list'):
@@ -318,12 +309,6 @@ def main():
             args.types = ['bills', 'legislators', 'votes', 'committees',
                           'alldata']
 
-            if 'events' in metadata['feature_flags']:
-                args.types.append('events')
-
-            if 'speeches' in metadata['feature_flags']:
-                args.types.append('speeches')
-
         plan = """billy-update abbr=%s
     actions=%s
     types=%s
@@ -368,8 +353,7 @@ def main():
             exec_start = dt.datetime.utcnow()
 
             # scraper order matters
-            order = ('legislators', 'committees', 'votes', 'bills',
-                     'events', 'speeches')
+            order = ('legislators', 'committees', 'votes', 'bills')
             _traceback = None
             try:
                 for stype in order:
@@ -433,6 +417,17 @@ def main():
                 print("\n".join(module.session_list()))
             else:
                 raise ScrapeError('session_list() is not defined')
+
+        # get ending time
+        end_time = dt.datetime.utcnow()
+
+        # calculate number of minutes and seconds it took
+        total_seconds = (end_time - start_time).total_seconds()
+        minutes = int(total_seconds / 60)
+        seconds = int(total_seconds - (minutes * 60))
+
+        print("Time to Completion: %s minutes, %s seconds" % (minutes, seconds))
+        print("Successfully Finished Scraper")
 
     except ScrapeError as e:
         logging.getLogger('billy').critical('Error: %s', e)
