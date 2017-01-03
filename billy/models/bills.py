@@ -108,7 +108,7 @@ class SponsorsManager(AttrManager):
     def first_fifteen_remainder(self):
         len_ = len(self.document['sponsors'])
         if 15 < len_:
-            return list(itertools.islice(self, 15))
+            return list(itertools.islice(self, 16, len_+1))
 
 
 class Action(dict):
@@ -333,7 +333,7 @@ class BillSearchResults(object):
         self._len = None
 
     def __len__(self):
-        if not self._len:
+        if self._len is None:
             if self.es_search:
                 resp = elasticsearch.count(self.es_search['query'],
                                            index='billy', doc_type='bills')
