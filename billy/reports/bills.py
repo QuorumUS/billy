@@ -64,6 +64,10 @@ def scan_bills(abbr):
         last_date = datetime.datetime(1900, 1, 1)
         for action in bill['actions']:
             date = action['date']
+            
+            if not date:
+              continue 
+
             if date < last_date:
                 session_d['actions_unsorted'].add(bill['_id'])
             session_d['action_count'] += 1
