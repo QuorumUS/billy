@@ -26,10 +26,10 @@
     "offices": {"type": "array", "items": {"type": "object", "properties": {
         "type": {"type": "string", "enum": ["capitol", "district"]},
         "name": {"type": "string"},
-        "address": {"type": ["string", "null"]},
-        "phone": {"type": ["string", "null"]},
-        "fax": {"type": ["string", "null"]},
-        "email": {"type": ["string", "null"]}
+        "address": {"type": ["string", "null"], "blank": true, "required": false},
+        "phone": {"type": ["string", "null"], "blank": true, "required": false},
+        "fax": {"type": ["string", "null"], "blank": true, "required": false},
+        "email": {"type": ["string", "null"], "blank": true, "required": false}
     }}},
     "photo_url": {"type": "string", "blank": true, "required": false},
     "office_phone": {"type": "string", "blank": true, "required": false},
