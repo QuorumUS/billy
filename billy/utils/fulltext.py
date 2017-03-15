@@ -12,7 +12,7 @@ import boto.s3.key
 from billy.scrape.utils import convert_pdf
 from billy.core import settings, s3bucket
 
-
+proxy_dict = {'http': 'http://localhost:1031', 'https': 'http://localhost:1031'}
 _log = logging.getLogger('billy.utils.fulltext')
 
 
@@ -68,7 +68,12 @@ def s3_get(abbr, doc):
         try:
             return k.get_contents_as_string()
         except:
-            response = requests.get(doc['url'].replace(' ', '%20'))
+            # CUSTOM PROXY LOGIC
+            # try with proxy first, if doesn't work, try without
+            try:
+                response = requests.get(doc['url'].replace(' ', '%20'), proxies=proxy_dict)
+            except:
+                response = requests.get(doc['url'].replace(' ', '%20'))
             content_type = response.headers.get('content-type')
             if not content_type:
                 url = doc['url'].lower()
@@ -81,7 +86,12 @@ def s3_get(abbr, doc):
             _log.debug('pushed %s to s3 as %s', doc['url'], doc['doc_id'])
             return response.content
     else:
-        return requests.get(doc['url'].replace(' ', '%20')).content
+        # CUSTOM PROXY LOGIC
+        # try with proxy first, if doesn't work, try without
+        try:
+            return requests.get(doc['url'].replace(' ', '%20'), proxies=proxy_dict).content
+        except:
+            return requests.get(doc['url'].replace(' ', '%20')).content
 
 
 PUNCTUATION = re.compile('[%s]' % re.escape(string.punctuation))

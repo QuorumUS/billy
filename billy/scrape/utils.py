@@ -3,11 +3,20 @@ import itertools
 import subprocess
 import collections
 
+proxy_dict = {'http': 'http://localhost:1031', 'https': 'http://localhost:1031'}
+
 
 def url_xpath(url, path):
     import requests
     import lxml.html
-    doc = lxml.html.fromstring(requests.get(url).text)
+
+    # CUSTOM PROXY LOGIC
+    # try with proxy first, if doesn't work, try without
+    try:
+        doc = lxml.html.fromstring(requests.get(url, proxies=proxy_dict).text)
+    except:
+        doc = lxml.html.fromstring(requests.get(url).text)
+
     return doc.xpath(path)
 
 
