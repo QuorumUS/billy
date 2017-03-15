@@ -135,7 +135,6 @@ def _do_imports(abbrev, args):
     from billy.importers.bills import import_bills
     from billy.importers.legislators import import_legislators
     from billy.importers.committees import import_committees
-    from billy.importers.speeches import import_speeches
 
     # always import metadata and districts
     import_metadata(abbrev)
@@ -161,7 +160,6 @@ def _do_reports(abbrev, args):
     from billy.reports.votes import vote_report
     from billy.reports.legislators import legislator_report
     from billy.reports.committees import committee_report
-    from billy.reports.speeches import speech_report
 
     report = db.reports.find_one({'_id': abbrev})
     if not report:
@@ -172,10 +170,8 @@ def _do_reports(abbrev, args):
     if 'bills' in args.types:
         report['bills'] = bill_report(abbrev)
         report['votes'] = vote_report(abbrev)
-    if 'committees' in args.types:
+    if 'committees' in args.types or 'legislators' in args.types:
         report['committees'] = committee_report(abbrev)
-    if 'speeches' in args.types:
-        report['speeches'] = speech_report(abbrev)
 
     db.reports.save(report, safe=True)
 
