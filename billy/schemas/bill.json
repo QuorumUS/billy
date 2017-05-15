@@ -52,6 +52,7 @@
                                 "bill:reading:1",
                                 "bill:reading:2",
                                 "bill:reading:3",
+                                "enacted:tenday",
                                 "other"
                             ],
                             "type": "string"
