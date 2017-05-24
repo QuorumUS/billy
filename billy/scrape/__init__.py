@@ -200,14 +200,16 @@ class Scraper(scrapelib.Scraper):
         # validate after writing, allows for inspection
         self.validate_json(obj)
 
-    def get_js_url(self, url, sleep=3):
+    def get_js_url(self, url, script=""):
         """ Get's url that loads content via js """
         dryscrape.start_xvfb()
 
         session = dryscrape.Session()
         session.visit(url)
 
-        time.sleep(sleep)
+        if script:
+            session.exec_script(script)
+
         response = session.body()
         return response
 
