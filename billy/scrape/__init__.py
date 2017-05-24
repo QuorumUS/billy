@@ -72,6 +72,11 @@ class Scraper(scrapelib.Scraper):
             self.requests_per_minute = 0
             self.cache_write_only = False
 
+        # if scraper uses dryscrape, set up session
+        if settings.USES_DRYSCRAPE:
+            dryscrape.start_xvfb()
+            self.session = dryscrape.Session()
+
         self.metadata = metadata
         self.output_dir = output_dir
         self.output_names = set()
@@ -200,17 +205,16 @@ class Scraper(scrapelib.Scraper):
         # validate after writing, allows for inspection
         self.validate_json(obj)
 
-    def get_js_url(self, url, script=""):
+    def get_js_url(self, url, script="", sleep=1):
         """ Get's url that loads content via js """
-        dryscrape.start_xvfb()
-
-        session = dryscrape.Session()
-        session.visit(url)
+        self.session.visit(url)
 
         if script:
-            session.exec_script(script)
+            self.session.exec_script(script)
 
-        response = session.body()
+        time.sleep(sleep)
+
+        response = self.session.body()
         return response
 
 
