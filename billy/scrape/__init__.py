@@ -207,14 +207,22 @@ class Scraper(scrapelib.Scraper):
 
     def get_js_url(self, url, script="", sleep=1):
         """ Get's url that loads content via js """
+        # visit url
         self.session.visit(url)
 
+        # if script passed to run, run script
         if script:
             self.session.exec_script(script)
 
+        # sleep
         time.sleep(sleep)
 
+        # get page content
         response = self.session.body()
+
+        # reset session
+        self.session.reset()
+
         return response
 
 
