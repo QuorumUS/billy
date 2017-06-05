@@ -10,12 +10,24 @@ def url_xpath(url, path):
     import requests
     import lxml.html
 
-    # CUSTOM PROXY LOGIC
-    # try with proxy first, if doesn't work, try without
-    try:
-        doc = lxml.html.fromstring(requests.get(url, proxies=proxy_dict).text)
-    except:
-        doc = lxml.html.fromstring(requests.get(url).text)
+    doc = None
+    ex = None
+    # try with verify=True first, if that doesn't work
+    # try with verify=False b/c sometimes state websites
+    # have bad SSL certificates
+    for verify in [True, False]:
+        # CUSTOM PROXY LOGIC
+        # try with proxy first, if doesn't work, try without
+        try:
+            doc = lxml.html.fromstring(requests.get(url, proxies=proxy_dict, verify=verify).text)
+        except:
+            try:
+                doc = lxml.html.fromstring(requests.get(url, verify=verify).text)
+            except Exception, ex:
+                doc = None
+
+    if not doc:
+        raise(ex)
 
     return doc.xpath(path)
 
